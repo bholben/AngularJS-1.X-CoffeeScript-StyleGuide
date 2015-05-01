@@ -1,755 +1,655 @@
-# AngularJS styleguide
+# AngularJS 1.X CoffeeScript Style Guide
 
-*Opinionated AngularJS styleguide for teams by [@toddmotto](//twitter.com/toddmotto)*
+*Opinionated AngularJS 1.X style guide for teams by [@rbholben](//twitter.com/rbholben)*
 
-A standardised approach for developing AngularJS applications in teams. This styleguide touches on concepts, syntax, conventions and is based on my experience [writing](http:////toddmotto.com) about, [talking](https://speakerdeck.com/toddmotto) about, and building Angular applications.
+The purpose of this style guide is to propose structure and conventions for scalable team-built Angular 1.X CoffeeScript applications.  It can also serve as a syntax "cheat sheet" for how to constuct various angular features.  This guide has been forked from and heavily influenced by Todd Motto's [AngularJS style guide](https://github.com/toddmotto/angularjs-styleguide) and customized to work with CoffeeScript.
 
-#### Community
-[John Papa](//twitter.com/John_Papa) and I have discussed in-depth styling patterns for Angular and as such have both released separate styleguides. Thanks to those discussions, I've learned some great tips from John that have helped shape this guide. We've both created our own take on a styleguide. I urge you to [check his out](//github.com/johnpapa/angularjs-styleguide) to compare thoughts.
+The [`yo ng-poly`](https://github.com/dustinspecker/generator-ng-poly) project is the closest Yeoman generator I have found for scaffolding a project that fits these conventions.  This generator is very flexible, providing a plethora of options (HTML, CSS, JavaScript, Jade, Sass, Less, Stylus, CoffeeScript, et al).
 
-> See the [original article](http://toddmotto.com/opinionated-angular-js-styleguide-for-teams) that sparked this off
 
 ## Table of Contents
 
-  1. [Modules](#modules)
+  1. [General CoffeeScript](#general-coffeescript)
+  1. [General Angular](#general-angular)
+  1. [Code Structure](#code-structure)
   1. [Controllers](#controllers)
-  1. [Services and Factory](#services-and-factory)
+  1. [Services](#services)
   1. [Directives](#directives)
   1. [Filters](#filters)
-  1. [Routing resolves](#routing-resolves)
-  1. [Publish and subscribe events](#publish-and-subscribe-events)
-  1. [Performance](#performance)
-  1. [Angular wrapper references](#angular-wrapper-references)
-  1. [Comment standards](#comment-standards)
-  1. [Minification and annotation](#minification-and-annotation)
+  1. [Comment Standards](#comment-standards)
+  1. [Minification & Annotation](#minification-annotation)
+  1. [File Structure](#file-structure)
+  1. [Tips & Tricks](#tips-tricks)
+    1. [Publish & Subscribe (Pub/Sub) Events](#publish-subscribe-pubsub-events)
+    1. [Performance](#performance)
+    1. [Angular Wrapper References](#angular-wrapper-references)
 
-## Modules
 
-  - **Definitions**: Declare modules without a variable using the setter and getter syntax
+## General CoffeeScript
 
-    ```javascript
-    // avoid
-    var app = angular.module('app', []);
-    app.controller();
-    app.factory();
+  - **Parentheses:** In CoffeeScript, parentheses are optional in many situations.  Favor the approach without parentheses.
 
-    // recommended
-    angular
-      .module('app', [])
-      .controller()
-      .factory();
+    ```coffeescript
+    # avoid
+    angular.module('someApp')
+
+    # recommended
+    angular.module 'someApp'
     ```
 
-  - Note: Using `angular.module('app', []);` sets a module, whereas `angular.module('app');` gets the module. Only set once and get for all other instances.
+  - `@` is CoffeeScript shorthand for `this`.  Favor `@`.
 
-  - **Methods**: Pass functions into module methods rather than assign as a callback
+  - **IIFE scoping:** CoffeeScript automatically compiles to JavaScript wrapped inside an IIFE (immediately invoked function expression).  This ensures that the global namespace will not be polluted.  It is not necessary to add any additional IIFE.
 
-    ```javascript
-    // avoid
-    angular
-      .module('app', [])
-      .controller('MainCtrl', function MainCtrl () {
+    This CoffeeScript...
 
-      })
-      .service('SomeService', function SomeService () {
+    ```coffeescript
+    'use strict'
 
-      });
-
-    // recommended
-    function MainCtrl () {
-
-    }
-    function SomeService () {
-
-    }
-    angular
-      .module('app', [])
-      .controller('MainCtrl', MainCtrl)
-      .service('SomeService', SomeService);
+    someVar = 'My string!'
     ```
 
-  - This aids with readability and reduces the volume of code "wrapped" inside the Angular framework
-  
-  - **IIFE scoping**: To avoid polluting the global scope with our function declarations that get passed into Angular, ensure build tasks wrap the concatenated files inside an IIFE
-  
-    ```javascript
-    (function () {
+    compiles into this JavaScript...
 
-      angular
-        .module('app', []);
-      
-      // MainCtrl.js
-      function MainCtrl () {
+    ```coffeescript
+    (function() {
+      'use strict'
+      var someVar;
 
-      }
-      
-      angular
-        .module('app')
-        .controller('MainCtrl', MainCtrl);
-      
-      // SomeService.js
-      function SomeService () {
+      someVar = 'My string!';
 
-      }
-      
-      angular
-        .module('app')
-        .service('SomeService', SomeService);
-        
-      // ...
-        
-    })();
+    }).call(this);
     ```
-
 
 **[Back to top](#table-of-contents)**
 
+
+## General Angular
+
+  - **lowerCamelCase:** Use lowerCamelCase for all directives and filters.  Angular requires them to be this way in order to translate into a hyphenated html name, i.e. `someDirective` is translated into `some-directive`.
+
+    ```coffeescript
+    # required
+    angular.module 'someApp'
+    .directive 'someDirective', ...
+
+    angular.module 'someApp'
+    .filter 'someFilter', ...
+    ```
+
+  - **UpperCamelCase:** Use UpperCamelCase for all other angular providers (`.controller`, `.service`, `.factory`, `.constant`, etc.)
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .controller 'SomeCtrl', ...
+
+    angular.module 'someApp'
+    .service 'SomeService', ...
+
+    angular.module 'someApp'
+    .constant 'SomeConstant', ...
+
+    angular.module 'someApp'
+    .value 'SomeValue', ...
+
+    angular.module 'someApp'
+    .provider 'SomeProvider', ...
+    ```
+
+**[Back to top](#table-of-contents)**
+
+
+## Code Structure
+
+  - **Module Setter & Getters**:
+
+    `angular.module 'someApp', []` sets a module.
+
+    `angular.module 'someApp'` gets the previously set module.
+
+    A module must only be set once.  Do this in a standalone file.
+
+      ```coffeescript
+      # avoid
+      angular.module 'someApp', [
+        ...
+        ...
+      ]
+      .config...
+      .run...
+
+      # recommended
+      angular.module 'someApp', [
+        ...
+        ...
+      ]
+      ```
+
+  - **One Provider per File:** Only put one provider per file.  This consistent approach will keep your development project more navigable and predictable.  Build tools will ultimately concatenate into a single file for production.
+
+  - **Angular Method Chaining:** Assigning the module to a variable is not the preferred approach. Instead, chain your providers from `angular.module 'someApp'`.  This makes the top of each angular file consistent and predictable.  It reduces the amount of cross-file searching to identify a variable.
+
+    ```coffeescript
+    # avoid
+    someApp = angular.module 'someApp', []
+    ```
+    ```coffeescript
+    # avoid
+    someApp.controller ...
+    ```
+
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp', []
+    ```
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .controller 'SomeCtrl', ...
+    ```
+
+  - **Provider Indentation:** Don't bother indenting the provider method.  This causes unnecessary whitespace for all that follows.  You may find this to be your editor's default behavior.
+
+    ```coffeescript
+    # avoid
+    angular.module 'someApp'
+      .controller 'SomeCtrl', ...
+
+    # recommended
+    angular.module 'someApp'
+    .controller 'SomeCtrl', ...
+    ```
+
+  - **Using Classes:** Do not pass anonymous functions into providers (controllers, services, etc.)  Instead, use a class name.  This little trick will compile your CoffeeScript into a function declaration and this has the nice side-effect of allowing you to move this function below the angular-specific code.  This is an especially clean and consistent approach for setting up [directives](#directives).
+
+    ```coffeescript
+    # avoid
+    angular.module 'someApp'
+    .controller 'SomeCtrl', -> ()
+      ...
+
+    # recommended
+    angular.module 'someApp'
+      .controller 'SomeCtrl', class SomeCtrl
+
+    SomeCtrl ->
+
+      constructor: (SomeService) ->
+
+        @someMethod = (someParam) ->
+          @someVar = SomeService.someSvcMethod(someParam)
+    ```
+
+  - **Strict Mode:** Write all files using [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode).  The first line in each CoffeeScript (or JavaScript) file should be `'use strict'`.
+
+  - **Angular code at top of each file:** Place the angular module and provider lines at the top of each file.  This makes it immediately evident to the viewer what the code is doing.
+
+  - **Putting it all Together:**
+
+    Module setter file...
+
+    ```coffeescript
+    angular.module 'someApp', [
+      ...
+      ...
+    ]
+    ```
+
+    Provider file (same approach for [controller](#controllers), [service](#services), [directive](#directives), etc.)...
+
+    ``` coffeescript
+    'use strict'
+
+    angular.module 'someApp'
+    .controller 'SomeCtrl', class SomeCtrl
+
+    SomeCtrl ->
+
+      constructor: $log, someService ->
+
+        @someVar1 = someService.someSvcMethod1()
+        @someVar2 = someService.someSvcMethod2()
+
+    ```
+
+**[Back to top](#table-of-contents)**
+
+
 ## Controllers
 
-  - **controllerAs syntax**: Controllers are classes, so use the `controllerAs` syntax at all times
+  - **controllerAs syntax:** Controllers are classes, so use the `controllerAs` syntax at all times.  The `controllerAs` syntax uses `this` inside controllers, which gets bound to `$scope`.  `controllerAs` especially shines with nested controllers as it makes all variables explicit.
 
     ```html
     <!-- avoid -->
-    <div ng-controller="MainCtrl">
+    <div ng-controller="SomeCtrl">
       {{ someObject }}
     </div>
 
     <!-- recommended -->
-    <div ng-controller="MainCtrl as vm">
-      {{ vm.someObject }}
+    <div ng-controller="SomeCtrl as sc">
+      {{ sc.someObject }}
     </div>
     ```
 
-  - In the DOM we get a variable per controller, which aids nested controller methods, avoiding any `$parent` calls
+  - **Fat Arrow:** Use CoffeeScript's "fat arrow" syntax to pass outer scope `this` context into a nested function.
 
-  - The `controllerAs` syntax uses `this` inside controllers, which gets bound to `$scope`
-
-    ```javascript
-    // avoid
-    function MainCtrl ($scope) {
-      $scope.someObject = {};
-      $scope.doSomething = function () {
-
-      };
-    }
-
-    // recommended
-    function MainCtrl () {
-      this.someObject = {};
-      this.doSomething = function () {
-
-      };
-    }
+    ```coffeescript
+    @someVar = (query) => SomeService.someVar(query).then =>
+      @arr = SomeService.someObject
     ```
 
-  - Only use `$scope` in `controllerAs` when necessary; for example, publishing and subscribing events using `$emit`, `$broadcast`, `$on` or `$watch`. Try to limit the use of these, however, and treat `$scope` as a special use case
+    Use CoffeeScript's regular arrow if no nested functions.
 
-  - **Inheritance**: Use prototypal inheritance when extending controller classes
-
-    ```javascript
-    function BaseCtrl () {
-      this.doSomething = function () {
-
-      };
-    }
-    BaseCtrl.prototype.someObject = {};
-    BaseCtrl.prototype.sharedSomething = function () {
-
-    };
-
-    AnotherCtrl.prototype = Object.create(BaseCtrl.prototype);
-
-    function AnotherCtrl () {
-      this.anotherSomething = function () {
-
-      };
-    }
+    ```coffeescript
+    @someVar = -> SomeService.someObject
     ```
 
-  - Use `Object.create` with a polyfill for browser support
+  - **Avoid `$scope`:** Only use `$scope` when necessary; for example, publishing and subscribing events using `$emit`, `$broadcast`, `$on` or `$watch`. Try to limit the use of these, however, and treat `$scope` as a special use case.
 
-  - **controllerAs 'vm'**: Capture the `this` context of the Controller using `vm`, standing for `ViewModel`
+  - **No Business Logic:** The only logic in a controller should be presentation logic.  Avoid business logic (this should only live in a [service](#services)).
 
-    ```javascript
-    // avoid
-    function MainCtrl () {
-      var doSomething = function () {
+    ```coffeescript
+    # avoid
+    SomeCtrl ->
 
-      };
-      this.doSomething = doSomething;
-    }
+      constructor: SomeService ->
 
-    // recommended
-    function MainCtrl () {
-      var vm = this;
-      var doSomething = function () {
-        
-      };
-      vm.doSomething = doSomething;
-    }
+        retrieve = $http.get('/somepath').success (response) =>
+          @data = response
+
+        @delete = someObject, index => $http.delete('/someString/' + someObject.id).then (response) =>
+          @data.splice index, 1
+
+        retrieve()
+
+    # recommended
+    SomeCtrl ->
+
+      constructor: SomeService ->
+
+        retrieve = SomeService.get().then =>
+          @data = SomeService.someObject
+
+        @delete = someObject, index => SomeService.delete(someObject).then =>
+          @data.splice index, 1
+
+        retrieve()
     ```
 
-    *Why?* : Function context changes the `this` value, use it to avoid `.bind()` calls and scoping issues
-    
-  - **ES6**: Avoid `var vm = this;` when using ES6
+  - **No DOM manipulation:** Avoid DOM manipulation (this should only live in a [directive](#directives)).
 
-    ```javascript
-    // avoid
-    function MainCtrl () {
-      let vm = this;
-      let doSomething = arg => {
-        console.log(vm);
-      };
-      
-      // exports
-      vm.doSomething = doSomething;
-    }
+  - **Quick Summary Example:**
 
-    // recommended
-    function MainCtrl () {
-      
-      let doSomething = arg => {
-        console.log(this);
-      };
-      
-      // exports
-      this.doSomething = doSomething;
-      
-    }
+    ``` coffeescript
+    'use strict'
+
+    angular.module 'someApp'
+    .controller 'SomeCtrl', class SomeCtrl
+
+    SomeCtrl ->
+
+      constructor: $log, someService ->
+
+        @someVar1 = someService.someSvcMethod1()
+        @someVar2 = someService.someSvcMethod2()
+
     ```
 
-    *Why?* : Use ES6 arrow functions when necessary to access the `this` value lexically
 
-  - **Presentational logic only (MVVM)**: Presentational logic only inside a controller, avoid Business logic (delegate to Services)
-
-    ```javascript
-    // avoid
-    function MainCtrl () {
-      
-      var vm = this;
-
-      $http
-        .get('/users')
-        .success(function (response) {
-          vm.users = response;
-        });
-
-      vm.removeUser = function (user, index) {
-        $http
-          .delete('/user/' + user.id)
-          .then(function (response) {
-            vm.users.splice(index, 1);
-          });
-      };
-
-    }
-
-    // recommended
-    function MainCtrl (UserService) {
-
-      var vm = this;
-
-      UserService
-        .getUsers()
-        .then(function (response) {
-          vm.users = response;
-        });
-
-      vm.removeUser = function (user, index) {
-        UserService
-          .removeUser(user)
-          .then(function (response) {
-            vm.users.splice(index, 1);
-          });
-      };
-
-    }
-    ```
-
-    *Why?* : Controllers should fetch Model data from Services, avoiding any Business logic. Controllers should act as a ViewModel and control the data flowing between the Model and the View presentational layer. Business logic in Controllers makes testing Services impossible.
 
 **[Back to top](#table-of-contents)**
 
-## Services and Factory
 
-  - All Angular Services are singletons, using `.service()` or `.factory()` differs the way Objects are created.
+## Services
 
-  **Services**: act as a `constructor` function and are instantiated with the `new` keyword. Use `this` for public methods and variables
+  - **Use `.service`:** All angular service providers are singletons.  Usage of `.service` or `.factory` is purely a preference and each provides a different way to create objects.  Favor services over factories since the syntax matches the way that [controllers are defined above](#controllers).
 
-    ```javascript
-    function SomeService () {
-      this.someMethod = function () {
+    Services use a `constructor` function.  Use `@` for public methods and variables (equivalent to `.this`).
 
-      };
-    }
-    angular
-      .module('app')
-      .service('SomeService', SomeService);
+    ```coffeescript
+    angular.module 'someApp'
+    .service 'SomeService', SomeService
+
+    SomeService ->
+      constructor: ($http, $q, $log) ->
+        @get = ->
+          deferred = $q.defer()
+          $http.get()
+          .success (data) ->
+            deferred.resolve(data)
+            someObject = data
+          .error (data, status) ->
+            $log.error 'Error: ', status, data
     ```
-
-  **Factory**: Business logic or provider modules, return an Object or closure
-
-  - Always return a host Object instead of the revealing Module pattern due to the way Object references are bound and updated
-
-    ```javascript
-    function AnotherService () {
-      var AnotherService = {};
-      AnotherService.someValue = '';
-      AnotherService.someMethod = function () {
-
-      };
-      return AnotherService;
-    }
-    angular
-      .module('app')
-      .factory('AnotherService', AnotherService);
-    ```
-
-    *Why?* : Primitive values cannot update alone using the revealing module pattern
 
 **[Back to top](#table-of-contents)**
+
 
 ## Directives
 
-  - **Declaration restrictions**: Only use `custom element` and `custom attribute` methods for declaring your Directives (`{ restrict: 'EA' }`) depending on the Directive's role
+  - **KISS Principle:** Only include the high level information at the top of your directive.  Details should be in functions further down in the code.
+
+  - **Declaration restrictions:** Only create element or attribute directives (`restrict: 'EA'`).
+
+  - **Simple Guideline: Template --> Element Directive:** If your directive contains a template, use an element directive.  Otherwise, use an attribute directive.  The default value for `restrict` is `EA`; this is fine, but keep this template guideline in mind when coding your html.
 
     ```html
-    <!-- avoid -->
+    <!-- when the directive has a template or templateURL property -->
+    <some-directive></some-directive>
 
-    <!-- directive: my-directive -->
-    <div class="my-directive"></div>
-
-    <!-- recommended -->
-
-    <my-directive></my-directive>
-    <div my-directive></div>
+    <!-- when the directive has no template -->
+    <div some-directive></div>
     ```
 
-  - Comment and class name declarations are confusing and should be avoided. Comments do not play nicely with older versions of IE. Using an attribute is the safest method for browser coverage.
+  - **Avoid Old-style Directives:** Don't use class or comment directives.
 
-  - **Templating**: Use `Array.join('')` for clean templating
+  - **Templating**: Use `Array.join ''` for a cleaner, easier-to-read template.
 
-    ```javascript
-    // avoid
-    function someDirective () {
-      return {
-        template: '<div class="some-directive">' +
+    ```coffeescript
+    # avoid
+    someDirective ->
+      template: '<div>' +
           '<h1>My directive</h1>' +
         '</div>'
-      };
-    }
 
-    // recommended
-    function someDirective () {
-      return {
-        template: [
-          '<div class="some-directive">',
-            '<h1>My directive</h1>',
-          '</div>'
-        ].join('')
-      };
-    }
+    # recommended
+    someDirective ->
+      template: [
+        '<div>'
+          '<h1>My directive</h1>'
+        '</div>'
+      ].join ''
     ```
 
-    *Why?* : Improves readability as code can be indented properly, it also avoids the `+` operator which is less clean and can lead to errors if used incorrectly to split lines
+    For longer templates, use `templateUrl` and move to a separate file.  This further improves readability and opens up additional editor features.
 
-  - **DOM manipulation**: Takes place only inside Directives, never a controller/service
+  - **DOM Manipulation:** Should only take place inside a directives, never a controller or service.
 
-    ```javascript
-    // avoid
-    function UploadCtrl () {
-      $('.dragzone').on('dragend', function () {
-        // handle drop functionality
-      });
-    }
-    angular
-      .module('app')
-      .controller('UploadCtrl', UploadCtrl);
+    ```coffeescript
+    # avoid
+    angular.module 'someApp'
+    .controller 'UploadCtrl', class UploadCtrl
 
-    // recommended
-    function dragUpload () {
-      return {
-        restrict: 'EA',
-        link: function (scope, element, attrs) {
-          element.on('dragend', function () {
-            // handle drop functionality
-          });
-        }
-      };
-    }
-    angular
-      .module('app')
-      .directive('dragUpload', dragUpload);
+    UploadCtrl ->
+      constructor:
+        $('.dragzone').on 'dragend', function ->
+          ...
+
+    # recommended
+    angular.module 'someApp'
+    .directive 'dragUpload',  ->
+      link: DragUploadLink
+
+    class DragUploadLink
+      constructor: (scope, element, attrs) ->
+        element.on('dragend', ->
+          ...
     ```
 
-  - **Naming conventions**: Never `ng-*` prefix custom directives, they might conflict future native directives
+  - **Naming conventions:** Never `ng-*` prefix custom directives, they might conflict future native directives.  It is recommended to prefix all custom directives with company or project-specific characters to reduce the liklihood of naming collisions with 3rd party directives you may import.  Also see [general name convention comment](#general-angular) about lowerCamelCasing directive names.
 
-    ```javascript
-    // avoid
-    // <div ng-upload></div>
-    function ngUpload () {
-      return {};
-    }
-    angular
-      .module('app')
-      .directive('ngUpload', ngUpload);
-
-    // recommended
-    // <div drag-upload></div>
-    function dragUpload () {
-      return {};
-    }
-    angular
-      .module('app')
-      .directive('dragUpload', dragUpload);
-    ```
-
-  - Directives and Filters are the _only_ providers that have the first letter as lowercase; this is due to strict naming conventions in Directives. Angular hyphenates `camelCase`, so `dragUpload` will become `<div drag-upload></div>` when used on an element.
-
-  - **controllerAs**: Use the `controllerAs` syntax inside Directives as well
-
-    ```javascript
-    // avoid
-    function dragUpload () {
-      return {
-        controller: function ($scope) {
-
-        }
-      };
-    }
-    angular
-      .module('app')
-      .directive('dragUpload', dragUpload);
-
-    // recommended
-    function dragUpload () {
-      return {
-        controllerAs: 'vm',
-        controller: function () {
-
-        }
-      };
-    }
-    angular
-      .module('app')
-      .directive('dragUpload', dragUpload);
-    ```
+  - **controllerAs**: Use the `controllerAs` syntax inside Directives as well.
 
 **[Back to top](#table-of-contents)**
+
 
 ## Filters
 
-  - **Global filters**: Create global filters using `angular.filter()` only. Never use local filters inside Controllers/Services
+  - **Global filters**: Create global filters using `angular.filter()` only.  Never use local filters inside controllers or services so as to enhance testing and reusability.
 
-    ```javascript
-    // avoid
-    function SomeCtrl () {
-      this.startsWithLetterA = function (items) {
-        return items.filter(function (item) {
-          return /^a/i.test(item.name);
-        });
-      };
-    }
-    angular
-      .module('app')
-      .controller('SomeCtrl', SomeCtrl);
+    ```coffeescript
+    # avoid
+    angular.module 'someApp'
+    .controller 'SomeCtrl', class SomeCtrl
+    SomeCtrl
+      constructor: ->
+        @startsWithLetterA = (items) ->
+          items.filter (item) ->
+            /^a/i.test item.name
 
-    // recommended
-    function startsWithLetterA () {
-      return function (items) {
-        return items.filter(function (item) {
-          return /^a/i.test(item.name);
-        });
-      };
-    }
-    angular
-      .module('app')
-      .filter('startsWithLetterA', startsWithLetterA);
+
+    # recommended
+    angular.module 'someApp'
+    .filter 'startsWithLetterA', class startsWithLetterA
+    startsWithLetterA
+      constructor: ->
+        (items) ->
+          items.filter (item) ->
+            /^a/i.test item.name
     ```
 
-  - This enhances testing and reusability
+  - See [general name convention comment](#general-angular) about lowerCamelCasing filter names.
 
 **[Back to top](#table-of-contents)**
 
-## Routing resolves
 
-  - **Promises**: Resolve Controller dependencies in the `$routeProvider` (or `$stateProvider` for `ui-router`), not the Controller itself
+## Comment Standards
 
-    ```javascript
-    // avoid
-    function MainCtrl (SomeService) {
-      var _this = this;
-      // unresolved
-      _this.something;
-      // resolved asynchronously
-      SomeService.doSomething().then(function (response) {
-        _this.something = response;
-      });
-    }
-    angular
-      .module('app')
-      .controller('MainCtrl', MainCtrl);
+  **jsDoc**: Use jsDoc syntax to document function names, description, params and returns.
 
-    // recommended
-    function config ($routeProvider) {
-      $routeProvider
-      .when('/', {
-        templateUrl: 'views/main.html',
-        resolve: {
-          // resolve here
-        }
-      });
-    }
-    angular
-      .module('app')
-      .config(config);
-    ```
+  ```coffeescript
+  ###*
+   # @name Http
 
-  - **Controller.resolve property**: Never bind logic to the router itself. Reference a `resolve` property for each Controller to couple the logic
+   # @desc
+   # Send http requests to server.
+   #
+   ###
 
-    ```javascript
-    // avoid
-    function MainCtrl (SomeService) {
-      this.something = SomeService.something;
-    }
+  angular.module 'someApp'
+  .service 'Http', Http
 
-    function config ($routeProvider) {
-      $routeProvider
-      .when('/', {
-        templateUrl: 'views/main.html',
-        controllerAs: 'vm',
-        controller: 'MainCtrl'
-        resolve: {
-          doSomething: function () {
-            return SomeService.doSomething();
-          }
-        }
-      });
-    }
+  Http ->
+    constructor: ($http, $q, $log) ->
 
-    // recommended
-    function MainCtrl (SomeService) {
-      this.something = SomeService.something;
-    }
+      ###*
+       # @name get
+       # @desc Send http get request to API endpoint
+       # @param {String} url - URI to direct request to
+       # @param {...} ... - ...
+       # @returns {Object} promise - ...
+       ###
 
-    MainCtrl.resolve = {
-      doSomething: function (SomeService) {
-        return SomeService.doSomething();
-      }
-    };
-
-    function config ($routeProvider) {
-      $routeProvider
-      .when('/', {
-        templateUrl: 'views/main.html',
-        controllerAs: 'vm',
-        controller: 'MainCtrl'
-        resolve: MainCtrl.resolve
-      });
-    }
-    ```
-
-  - This keeps resolve dependencies inside the same file as the Controller and the router free from logic
+      @get = (url, ...) ->
+        deferred = $q.defer()
+        ...
+        $http.get()
+        .success (data) ->
+          deferred.resolve(data)
+  ```
 
 **[Back to top](#table-of-contents)**
 
-## Publish and subscribe events
 
-  - **$scope**: Use the `$emit` and `$broadcast` methods to trigger events to direct relationship scopes only
+## Minification & Annotation
 
-    ```javascript
-    // up the $scope
-    $scope.$emit('customEvent', data);
+Use [ng-annotate](//github.com/olov/ng-annotate) for Gulp (`ng-min` is deprecated).  This will protect your code from minification routines which shorten variable names.  Function declarations will use angular's `.$inject` notation and function expressions will use angular bracket notation.  Adding `@ngInject` comments to your code will explicitly require `.$inject` notation which can yield faster performace.
 
-    // down the $scope
-    $scope.$broadcast('customEvent', data);
+**[Back to top](#table-of-contents)**
+
+
+## File Structure
+This is perhaps the area with more unique opinions than any other.  File structure can take on many forms.  I prefer a feature-based file structure simply because it scales in a way that makes it easy for a team member to work in a specific area of the code with all (or most) relevant files in the same folder.
+
+Here is a suggested feature-based file structure example for development files.
+
+```bash
+app/
+    common/
+        app/   # examples of general-purpose, app-specific scripts
+            api.coffee
+            cookies.coffee
+            paths.coffee
+            routes-config.coffee
+        app-module.coffee   # this is the script that kicks everything off
+        directives/   # examples of general-purpose directives
+            some_table/
+                some_table.coffee
+                some_table.html
+                some_table.scss
+            some_widget/
+                ...
+        filters/
+            some_filter1.coffee
+            some_filter2.coffee
+        utils/   # examples of general-purpose scripts (not app-specific)
+            lodash.coffee
+            user_auth.coffee
+        utils-module.coffee
+    components/
+        dashboard/
+            dashboard-ctrl.coffee
+            dashboard.coffee
+            dashboard.html
+            dashboard.scss
+            directives/   # examples of specialized directives
+                some_table1/
+                some_table2/
+        dashboard-module.coffee
+        home/
+            ...
+        home-module.coffee
+    fonts/
+    images/
+    index.html
+    main.scss   # register .scss files from various folders with import statements
+```
+
+**Notes about this example structure:**
+
+  - Example above shows html, scss, and coffee files.  This could just as easily include jade, haml, less, sass, styl, etc.
+
+  - All CoffeeScript filenames are hyphenated with the provider type suffixed after the hyphen.  It is common to use other delimeters besides `-`, such as `.` or `_` or even camelCasing.
+
+  - If the file is a service provider (i.e. service, factory, constant, value, provider) or directive, I optionally drop the name suffix from the filename.
+
+  - I place a small module file at the same level of the folder that contains the module files (this does not apply to directives).
+
+  - If any of the folders become too large and unwieldy (for example, `components`), it is easy enough to create a subdirectory structure.
+
+  - In the example above, `lodash.coffee` is simply a wrapper to bring lodash into the angular dependency injection environment and remove it from the window object.  Details explained in [this video](https://www.youtube.com/watch?v=OvBlI9KuaBk).
+
+  - Regardless of your favorite file structure, third party libraries will sometimes require a tweak of either the file structure or the library itself.
+
+
+## Tips & Tricks
+
+### Publish & Subscribe (Pub/Sub) Events
+
+  - **$scope**: Use the `$emit` and `$broadcast` methods to trigger events to direct relationship scopes only.
+
+    ```coffeescript
+    # up the $scope
+    $scope.$emit 'customEvent', data
+
+    # down the $scope
+    $scope.$broadcast 'customEvent', data
     ```
 
-  - **$rootScope**: Use only `$emit` as an application-wide event bus and remember to unbind listeners
+  - **$rootScope**: Use only `$emit` as an application-wide event bus and remember to unbind listeners.
 
-    ```javascript
-    // all $rootScope.$on listeners
-    $rootScope.$emit('customEvent', data);
+    ```coffeescript
+    # all $rootScope.$on listeners
+    $rootScope.$emit 'customEvent', data
     ```
 
-  - Hint: Because the `$rootScope` is never destroyed, `$rootScope.$on` listeners aren't either, unlike `$scope.$on` listeners and will always persist, so they need destroying when the relevant `$scope` fires the `$destroy` event
+  - ***Hint:*** Because the `$rootScope` is never destroyed, `$rootScope.$on` listeners aren't either, unlike `$scope.$on` listeners and will always persist, so they need destroying when the relevant `$scope` fires the `$destroy` event.
 
-    ```javascript
-    // call the closure
-    var unbind = $rootScope.$on('customEvent'[, callback]);
-    $scope.$on('$destroy', unbind);
+    ```coffeescript
+    # call the closure
+    unbind = $rootScope.$on 'customEvent'[, callback]
+    $scope.$on '$destroy', unbind
     ```
 
-  - For multiple `$rootScope` listeners, use an Object literal and loop each one on the `$destroy` event to unbind all automatically
+  - For multiple `$rootScope` listeners, use an Object literal and loop each one on the `$destroy` event to unbind all automatically.
 
-    ```javascript
-    var rootListeners = {
-      'customEvent1': $rootScope.$on('customEvent1'[, callback]),
-      'customEvent2': $rootScope.$on('customEvent2'[, callback]),
-      'customEvent3': $rootScope.$on('customEvent3'[, callback])
-    };
-    for (var unbind in rootListeners) {
-      $scope.$on('$destroy', rootListeners[unbind]);
-    }
+    ```coffeescript
+    rootListeners =
+      'customEvent1': $rootScope.$on 'customEvent1'[, callback]
+      'customEvent2': $rootScope.$on 'customEvent2'[, callback]
+      'customEvent3': $rootScope.$on 'customEvent3'[, callback]
+    $scope.$on '$destroy', rootListeners[unbind] for unbind in rootListeners
     ```
 
 **[Back to top](#table-of-contents)**
 
-## Performance
 
-  - **One-time binding syntax**: In newer versions of Angular (v1.3.0-beta.10+), use the one-time binding syntax `{{ ::value }}` where it makes sense
+### Performance
+
+  - **One-time Binding Syntax:** Since Angular 1.3, it is possible to use one-time binding syntax `{{ ::value }}`.  Binding once removes the watcher from the scope's `$$watchers` array after the `undefined` variable becomes resolved, thus improving performance in each dirty-check.
 
     ```html
-    // avoid
-    <h1>{{ vm.title }}</h1>
+    # avoid
+    <h1>{{ sc.title }}</h1>
 
-    // recommended
-    <h1>{{ ::vm.title }}</h1>
+    # recommended
+    <h1>{{ ::sc.title }}</h1>
     ```
-    
-    *Why?* : Binding once removes the watcher from the scope's `$$watchers` array after the `undefined` variable becomes resolved, thus improving performance in each dirty-check
-    
-  - **Consider $scope.$digest**: Use `$scope.$digest` over `$scope.$apply` where it makes sense. Only child scopes will update
 
-    ```javascript
-    $scope.$digest();
+  - **Consider $scope.$digest:** Use `$scope.$digest` over `$scope.$apply` where sensible. Only child scopes will update.  `$scope.$apply` will call `$rootScope.$digest`, which causes the entire application `$$watchers` to dirty-check again. Using `$scope.$digest` will dirty check current and child scopes from the initiated `$scope`.
+
+    ```coffeescript
+    $scope.$digest()
     ```
-    
-    *Why?* : `$scope.$apply` will call `$rootScope.$digest`, which causes the entire application `$$watchers` to dirty-check again. Using `$scope.$digest` will dirty check current and child scopes from the initiated `$scope`
+
 
 **[Back to top](#table-of-contents)**
 
-## Angular wrapper references
 
-  - **$document and $window**: Use `$document` and `$window` at all times to aid testing and Angular references
+### Angular Wrapper References
 
-    ```javascript
-    // avoid
-    function dragUpload () {
-      return {
-        link: function ($scope, $element, $attrs) {
-          document.addEventListener('click', function () {
+  - **$document and $window:** Use `$document` and `$window` at all times to aid testing and Angular references.
 
-          });
-        }
-      };
-    }
+    ```coffeescript
+    # avoid
+    dragUpload ->
+      link: $scope, $element, $attrs ->
+        document.addEventListener 'click', function ->
+          ...
 
-    // recommended
-    function dragUpload () {
-      return {
-        link: function ($scope, $element, $attrs, $document) {
-          $document.addEventListener('click', function () {
 
-          });
-        }
-      };
-    }
+    # recommended
+    dragUpload ->
+      link: $scope, $element, $attrs, $document ->
+        $document.addEventListener 'click', ->
+          ...
     ```
 
-  - **$timeout and $interval**: Use `$timeout` and `$interval` over their native counterparts to keep Angular's two-way data binding up to date
+  - **$timeout and $interval:** Use `$timeout` and `$interval` over their native counterparts to keep Angular's two-way data binding up to date.
 
-    ```javascript
-    // avoid
-    function dragUpload () {
-      return {
-        link: function ($scope, $element, $attrs) {
-          setTimeout(function () {
-            //
-          }, 1000);
-        }
-      };
-    }
+    ```coffeescript
+    # avoid
+    dragUpload ->
+      link: $scope, $element, $attrs ->
+        setTimeout ->
+          ..., 1000
 
-    // recommended
-    function dragUpload ($timeout) {
-      return {
-        link: function ($scope, $element, $attrs) {
-          $timeout(function () {
-            //
-          }, 1000);
-        }
-      };
-    }
+    # recommended
+    dragUpload $timeout ->
+      link: $scope, $element, $attrs ->
+        $timeout ->
+          ..., 1000
     ```
 
 **[Back to top](#table-of-contents)**
 
-## Comment standards
 
-  - **jsDoc**: Use jsDoc syntax to document function names, description, params and returns
-
-    ```javascript
-    /**
-     * @name SomeService
-     * @desc Main application Controller
-     */
-    function SomeService (SomeService) {
-
-      /**
-       * @name doSomething
-       * @desc Does something awesome
-       * @param {Number} x - First number to do something with
-       * @param {Number} y - Second number to do something with
-       * @returns {Number}
-       */
-      this.doSomething = function (x, y) {
-        return x * y;
-      };
-
-    }
-    angular
-      .module('app')
-      .service('SomeService', SomeService);
-    ```
-
-**[Back to top](#table-of-contents)**
-
-## Minification and annotation
-
-  - **ng-annotate**: Use [ng-annotate](//github.com/olov/ng-annotate) for Gulp as `ng-min` is deprecated, and comment functions that need automated dependency injection using `/** @ngInject */`
-
-    ```javascript
-    /**
-     * @ngInject
-     */
-    function MainCtrl (SomeService) {
-      this.doSomething = SomeService.doSomething;
-    }
-    angular
-      .module('app')
-      .controller('MainCtrl', MainCtrl);
-    ```
-
-  - Which produces the following output with the `$inject` annotation
-
-    ```javascript
-    /**
-     * @ngInject
-     */
-    function MainCtrl (SomeService) {
-      this.doSomething = SomeService.doSomething;
-    }
-    MainCtrl.$inject = ['SomeService'];
-    angular
-      .module('app')
-      .controller('MainCtrl', MainCtrl);
-    ```
-
-**[Back to top](#table-of-contents)**
-
-## Angular docs
+## Angular Docs
 For anything else, including API reference, check the [Angular documentation](//docs.angularjs.org/api).
+
 
 ## Contributing
 
 Open an issue first to discuss potential changes/additions.
 
+
 ## License
 
 #### (The MIT License)
 
-Copyright (c) 2015 Todd Motto
+Copyright (c) 2015 Bob Holben
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
