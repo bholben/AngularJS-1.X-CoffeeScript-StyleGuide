@@ -9,21 +9,26 @@ The [`yo ng-poly`](https://github.com/dustinspecker/generator-ng-poly) project i
 ***A note about style guides:***
 The goal here is to set a starting point.  Any team can start with this document and customize it to meet their needs.  Keep in mind that there are many ways to accomplish the same end goal.  Techniques defined below are merely one way.  The important thing is that teams agree on their own style early in the process.  Since much more time is spent reading code rather than writing code, team members that don't fit in with a common convention can greatly reduce the productivity of the team as a whole.
 
-***A note about Angular methods:***
-Angular apps are built with a handful of primary methods provided by Angular.  The frequently used methods are `.controller`, `.factory`, `.service`, `.constant`, `.value`, `.provider`, `.directive`, and `.filter`.  When this guide refers to "Angular methods," we mean these Angular methods.
-
 
 ## Table of Contents
 
-  1. [General CoffeeScript](#general-coffeescript)
-  1. [Angular Naming Conventions](#angular-naming-conventions)
-  1. [Code Structure](#code-structure)
-  1. [Controllers](#controllers)
-  1. [Services](#services)
-  1. [Directives](#directives)
-  1. [Filters](#filters)
-  1. [Comment Standards](#comment-standards)
-  1. [Minification & Annotation](#minification--annotation)
+  1. [General Conventions](#general-conventions)
+    1. [EditorConfig](#editorconfig)
+    1. [Linting](#linting)
+    1. [CoffeeScript](#coffeescript)
+  1. [Angular Code Structure](#angular-code-structure)
+    1. [Module Files](#module-files)
+    1. [Angular Method Files](#angular-method-files)
+    1. [Angular Method Names](#angular-method-names)
+    1. [CoffeeScript Class Usage](#coffeescript-class-usage)
+    1. [Minification & Annotation](#minification--annotation)
+    1. [Putting it all Together](#putting-it-all-together)
+  1. [Specific Angular Method Conventions](#specific-angular-method-conventions)
+    1. [Controller](#controller)
+    1. [Service](#service)
+    1. [Directive](#directive)
+    1. [Filter](#filters)
+    1. [Config & Run](#config--run)
   1. [File & Folder Conventions](#file--folder-conventions)
   1. [Tips & Tricks](#tips--tricks)
     1. [Publish & Subscribe (Pub/Sub) Events](#publish--subscribe-pubsub-events)
@@ -31,19 +36,60 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
     1. [Angular Wrapper References](#angular-wrapper-references)
 
 
-## General CoffeeScript
+## General Conventions
+This section includes broad conventions that are not Angular-specific.
+
+
+### EditorConfig
+  - An [.editorconfig](http://editorconfig.org/) file helps developers define and maintain consistent coding styles between different editors and IDEs.
+
+  - Put the following file at the top level of the project repository so that all contributors are using it.
+
+  ```
+  root = true
+
+  [*]
+  charset = utf-8
+  end_of_line = lf
+  indent_size = 2
+  indent_style = space
+  insert_final_newline = true
+  trim_trailing_whitespace = true
+  ```
+
+  - Adjust as necessary to meet the needs of the team.
+
+**[Back to top](#table-of-contents)**
+
+
+### Linting
+
+  - A linter is a tool that detects errors and potential problems in your code.  There are three popular linting tools for JavaScript: [JSLint](http://jslint.com/), [JSHint](http://jshint.com/), and [ESLint](http://eslint.org/).  Pick one.  I recommend JSHint.
+
+  - Enforce linting by (1) having team members add the appropriate plug-in to their editor, and (2) incorporating the linter into your build system (i.e. Gulp, Grunt, et al).
+
+  - Customize the linting configuration file to meet the needs of the team.  For JSHint, a good starting point is [this .jshintrc example file](https://github.com/jshint/jshint/blob/master/examples/.jshintrc).
+
+  - Put the linting configuration file at the top level of the project repository so that all contributors are using it.
+
+**[Back to top](#table-of-contents)**
+
+
+### CoffeeScript
 
   - **Parentheses:** In CoffeeScript, parentheses are optional in many situations.  Favor the approach without parentheses.
 
     ```coffeescript
     # avoid
     angular.module('someApp')
+    ```
 
+    ```coffeescript
     # recommended
     angular.module 'someApp'
     ```
 
-  - `@` is CoffeeScript shorthand for `this`.  Favor `@`.
+  - **this:** `@` is CoffeeScript shorthand for `this`.  Favor `@`.
 
   - **IIFE scoping:** CoffeeScript automatically compiles to JavaScript wrapped inside an IIFE (immediately invoked function expression).  This ensures that the global namespace will not be polluted.  It is not necessary to add any additional IIFE.
 
@@ -70,43 +116,12 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
 **[Back to top](#table-of-contents)**
 
 
-## Angular Naming Conventions
+## Angular Code Structure
 
-  - **lowerCamelCase:** Use lowerCamelCase for all directives and filters.  Angular requires them to be this way in order to translate into a hyphenated html name, i.e. `someDirective` is translated into `some-directive`.
-
-    ```coffeescript
-    # required
-    angular.module 'someApp'
-    .directive 'someDirective', ...
-
-    angular.module 'someApp'
-    .filter 'someFilter', ...
-    ```
-
-  - **UpperCamelCase:** Use UpperCamelCase for all other Angular methods.
-
-    ```coffeescript
-    # recommended
-    angular.module 'someApp'
-    .controller 'SomeCtrl', ...
-
-    angular.module 'someApp'
-    .service 'SomeService', ...
-
-    angular.module 'someApp'
-    .constant 'SomeConstant', ...
-
-    angular.module 'someApp'
-    .value 'SomeValue', ...
-
-    angular.module 'someApp'
-    .provider 'SomeProvider', ...
-    ```
-
-**[Back to top](#table-of-contents)**
+A major factor in team productivity is making sure the code inside each file has a consistent look and feel.  This section defines that look and feel.
 
 
-## Code Structure
+### Module Files
 
   - **Module Setter & Getters:**
 
@@ -114,29 +129,40 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
 
     `angular.module 'someApp'` gets the previously set module.
 
-    A module must only be set once.  Do this in a standalone file.
+    A module must be set exactly once.  Do this in a standalone file.
 
-      ```coffeescript
-      # avoid
-      angular.module 'someApp', [
-        ...
-        ...
-      ]
-      .config...
-      .run...
+    ```coffeescript
+    # avoid
+    angular.module 'someApp', [
+      ...
+      ...
+    ]
+    .config...
+    .run...
+    ```
 
-      # recommended
-      angular.module 'someApp', [
-        ...
-        ...
-      ]
-      ```
+    ```coffeescript
+    # recommended
+    angular.module 'someApp', [
+      ...
+      ...
+    ]
+    ```
 
-    For anything more than a simple app, consider breaking the app into multiple modules.  This does not mean that every file needs its own module, but it may be sensible to break it into logical chunks.
+  - **Module Philosophy:** For anything more than a simple app, consider breaking the app into multiple modules.  This does not mean that every file needs its own module, but it may be sensible to break it into logical chunks.  A good rule-of-thumb is to consider splitting our app into smaller modules if our list of module dependencies is greater than ~5.  Imagine someone trying to trace a parameter back to its origin who has to face a list of 20 module dependencies.
 
-  - **One Angular Method per File:** Only put one Anguler method per file.  This consistent approach will keep your development project more navigable and predictable.  Build tools will ultimately concatenate into a single file for production.
+**[Back to top](#table-of-contents)**
 
-  - **Angular Method Chaining:** Assigning the the returned module to a variable is not the preferred approach. Instead, chain your Angular method onto `angular.module 'someApp'` (the getter).  This makes each Angular file consistent and predictable.  It reduces the amount of cross-file searching to identify a variable.
+
+### Angular Method Files
+
+Angular apps are built with a handful of primary methods provided by Angular.  The frequently used methods are `.controller`, `.factory`, `.service`, `.constant`, `.value`, `.provider`, `.directive`, `.filter`, `config`, and `run`.  When this guide refers to "Angular methods," we mean these Angular methods.
+
+  - **One Angular Method per File:** Put exactly one Anguler method per file.  This consistent approach will keep our development project more navigable and predictable.  Build tools can ultimately concatenate into a single file for production.
+
+  - **Angular Method Up Top:** Place the Angular module and method lines at the top of each file.  This makes it immediately evident to the viewer what the code is doing.
+
+  - **Angular Method Chaining:** Assigning the the returned module to a variable is not the preferred approach. Instead, we chain our Angular method onto `angular.module 'someApp'` (the getter).  This makes each Angular file consistent and predictable.  It reduces the amount of cross-file searching to identify a variable.
 
     ```coffeescript
     # avoid
@@ -144,7 +170,7 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
     ```
     ```coffeescript
     # avoid
-    someApp.controller ...
+    someApp.controller 'SomeCtrl' ...
     ```
 
 
@@ -158,26 +184,90 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
     .controller 'SomeCtrl', ...
     ```
 
-  - **Angular Method Indentation:** Don't bother indenting the Angular method.  This causes unnecessary whitespace for all that follows.  You may find this to be your editor's default behavior.
+    Placing the method call on the second line allows us to remove any parentheses on the first line.
+
+  - **Angular Method Indentation:** Don't bother indenting the Angular method.  This causes unnecessary whitespace for all that follows.  Also, we may find this to be our editor's default behavior.
 
     ```coffeescript
     # avoid
     angular.module 'someApp'
       .controller 'SomeCtrl', ...
+    ```
 
+    ```coffeescript
     # recommended
     angular.module 'someApp'
     .controller 'SomeCtrl', ...
     ```
 
-  - **Using Classes:** CoffeeScript functions do not support JavaScript function declaration syntax, however CoffeeScript classes do.  This nuance allows us to use CoffeeScript classes to organize our code in a readable top-to-bottom way and take advantage of hoisting.
+  - **Strict Mode:** Write all files using [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode).  The first line in each CoffeeScript (or JavaScript) file should be `'use strict'`.
+
+**[Back to top](#table-of-contents)**
+
+
+### Angular Method Names
+
+  - **lowerCamelCase:** Use lowerCamelCase for all directives and filters.  Angular requires them to be this way in order to translate into a hyphenated html name, i.e. `someDirective` is translated into `some-directive`.
+
+    ```coffeescript
+    # required
+    angular.module 'someApp'
+    .directive 'someDirective', ...
+    ```
+
+    ```coffeescript
+    # required
+    angular.module 'someApp'
+    .filter 'someFilter', ...
+    ```
+
+  - **UpperCamelCase:** Use UpperCamelCase for all other Angular methods.
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .controller 'SomeCtrl', ...
+    ```
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .service 'SomeService', ...
+    ```
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .constant 'SomeConstant', ...
+    ```
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .value 'SomeValue', ...
+    ```
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .provider 'SomeProvider', ...
+    ```
+
+**[Back to top](#table-of-contents)**
+
+
+### CoffeeScript Class Usage
+
+  - **Code Organization:** CoffeeScript functions do not support JavaScript function declaration syntax, however CoffeeScript classes do.  This nuance allows us to use CoffeeScript classes to organize our code in a readable top-to-bottom way and take advantage of [hoisting](http://adripofjavascript.com/blog/drips/variable-and-function-hoisting.html).
 
     ```coffeescript
     # avoid
     angular.module 'someApp'
     .controller 'SomeCtrl', -> ()
       ...
+    ```
 
+    ```coffeescript
     # recommended
     angular.module 'someApp'
     .controller 'SomeCtrl', class SomeCtrl
@@ -193,29 +283,75 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
           @someVar2 = SomeService.someMethod2(someParam2)
     ```
 
-    At first glance, this appears to only instantiate one controller instance, but don't let this trip you up.  Angular manages the controller instances, not this code.  The same goes for services (singletons).  Angular will manage instantiation.
+    At first glance, this appears to only instantiate one controller instance, but we shouldn't let this trip us up.  Angular manages the controller instances, not this code.  The same goes for services (singletons), directives, and filters.  Angular will manage instantiation.
 
     Use `@` to dictate which variables and methods are exposed.
 
-  - **Match Your Names:** The string you use to define your Angular method should match the function (or class) that it calls.
+  - **Match Your Names:** The string we use to define our Angular method should match the class that it calls.
 
     ```coffeescript
     # avoid
     angular.module 'someApp'
-    .controller 'SomeCtrl', class SomeCoolCtrl
+    .controller 'SomeCtrl', class SomethingCool
+    ```
 
+    ```coffeescript
     # recommended
     angular.module 'someApp'
     .controller 'SomeCtrl', class SomeCtrl
     ```
 
-  - **Strict Mode:** Write all files using [strict mode](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Strict_mode).  The first line in each CoffeeScript (or JavaScript) file should be `'use strict'`.
+    The only exception is for directives and filters where the first letter of the name needs to be lowercase (see [Angular Method Naming](#angular-method-naming)).
 
-  - **Angular code at top of each file:** Place the Angular module and provider lines at the top of each file.  This makes it immediately evident to the viewer what the code is doing.
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .directive 'someDirective', class SomeDirective
+    ```
 
-  - **Putting it all Together:**
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .filter 'someFilter', class SomeFilter
+    ```
 
-    Module setter file...
+  - **Built-ins First:** when pulling parameters into our constructor, list the built-in services before our custom services.
+
+    ```coffeescript
+    # avoid
+    angular.module 'someApp'
+    .service 'SomeService', class SomeService
+      constructor: ($http, $q, SomeOtherService, $log) ->
+
+        ...
+    ```
+
+    ```coffeescript
+    # recommended
+    angular.module 'someApp'
+    .service 'SomeService', class SomeService
+      constructor: ($http, $q, $log, SomeOtherService) ->
+
+        ...
+    ```
+
+**[Back to top](#table-of-contents)**
+
+
+### Minification & Annotation
+
+  - Do not use Angular array syntax or `.$inject` in our code.  Neither technique is DRY.  They both reduce readability, increase unnecessary complexity to our code, and increase the potential for mistakes.  We should let our build system handle this for us.
+
+  - Use [ng-annotate](//github.com/olov/ng-annotate) for Gulp or Grunt (`ng-min` is deprecated).  This will protect our code from minification routines which shorten variable names and break the app.  Function declarations will use Angular's `.$inject` notation and function expressions will use Angular bracket notation.  Adding `@ngInject` comments to yur code will explicitly require `.$inject` notation which can yield faster performace.
+
+  - If we are not using one of these build system and we are compressing our JavaScript files by another means, let's make sure to run `ng-annotate` before compressing.
+
+**[Back to top](#table-of-contents)**
+
+
+### Putting it all Together
+
+  - Module setter file...
 
     ```coffeescript
     angular.module 'someApp', [
@@ -224,7 +360,7 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
     ]
     ```
 
-    Angular method file (same approach for [controller](#controllers), [service](#services), [directive](#directives), etc.)...
+  - Angular method file (same approach for [controller](#controller), [service](#service), [directive](#directive), etc.)...
 
     ``` coffeescript
     'use strict'
@@ -238,10 +374,71 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
 
     ```
 
+  - When we add jsDoc syntax to document function names, description, params and returns, it looks like this...
+
+    ```coffeescript
+    'use strict'
+
+    ###*
+     # @name Http
+
+     # @desc
+     # Send http requests to server.
+     #
+     ###
+
+    angular.module 'someApp'
+    .service 'Http', class Http
+      constructor: ($http, $q, $log) ->
+
+        ###*
+         # @name get
+         # @desc Send http get request to API endpoint
+         # @param {String} url - URI to direct request to
+         # @param {...} ... - ...
+         # @returns {Object} promise - ...
+         ###
+
+        @get = (url, ...) ->
+          deferred = $q.defer()
+          ...
+          $http.get()
+          .success (data) ->
+            deferred.resolve(data)
+          ...
+    ```
+
 **[Back to top](#table-of-contents)**
 
 
-## Controllers
+## Specific Angular Method Conventions
+
+This section defines a uniform syntax for each of the Angular methods.
+
+  - Most Angular methods such as `.controller`, `.service`, `.directive`, and `.filter` require a name string as the first parameter.  Use the same class/contructor syntax for each of these.  Build muscle memory.
+
+    ``` coffeescript
+    angular.module 'someApp'
+    .someMethod 'SomeName', class SomeName
+      constructor: someParam ->
+
+        ...
+    ```
+
+  - There are two Angular methods that don't pass a name string as the first parameter: `.config` and `.run`.  Use the same class/contructor syntax for each of these.
+
+    ``` coffeescript
+    angular.module 'someApp'
+    .someMethod, class SomeName
+      constructor: someParam ->
+
+        ...
+    ```
+
+**[Back to top](#table-of-contents)**
+
+
+### Controller
 
   - **Ctrl:** Most variables should be spelled out.  We make an exception for controllers since they are used everywhere and the word is excessively long.  Use "Ctrl".
 
@@ -250,7 +447,7 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
     .controller 'SomeCtrl', ...
     ```
 
-  - **controllerAs syntax:** Controllers are classes, so use the `controllerAs` syntax at all times.  The `controllerAs` syntax uses `this` inside controllers, which gets bound to `$scope`.  `controllerAs` especially shines with nested controllers as it makes all template variables explicitly clear.  Using this approach will also make the eventual transition to Angular 2.0 smoother.
+  - **controllerAs syntax:** Controllers are classes, so use the `controllerAs` syntax (introduced in Angular 1.1) at all times instead of the original Controller syntax with `$scope`.  The `controllerAs` syntax uses `this` inside controllers, which binds to `$scope`.  `controllerAs` especially shines with nested controllers as it makes all template variables explicitly clear.  Using this approach will also make the eventual transition to Angular 2.0 smoother.
 
     ```html
     <!-- avoid -->
@@ -279,7 +476,7 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
 
   - **Avoid `$scope`:** Only use `$scope` when necessary; for example, publishing and subscribing events using `$emit`, `$broadcast`, `$on` or `$watch`. Try to limit the use of these, however, and treat `$scope` as a special use case.
 
-  - **No Business Logic:** The only logic in a controller should be presentation logic.  Avoid business logic (this should only live in a [service](#services)).
+  - **No Business Logic:** The only logic in a controller should be presentation logic.  Avoid business logic (this should only live in a [service](#service)).
 
     ```coffeescript
     # avoid
@@ -290,9 +487,12 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
         @retrieve = $http.get('/somepath').success (response) =>
           @data = response
 
-        @delete = someObject, index => $http.delete('/someString/' + someObject.id).then (response) =>
-          @data.splice index, 1
+        @delete = someObject, index =>
+          $http.delete('/someString/' + someObject.id).then (response) =>
+            @data.splice index, 1
+    ```
 
+    ```coffeescript
     # recommended
     angular.module 'someApp'
     .controller 'SomeCtrl', class SomeCtrl
@@ -301,11 +501,12 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
         @retrieve = SomeService.get().then =>
           @data = SomeService.someObject
 
-        @delete = someObject, index => SomeService.delete(someObject).then =>
-          @data.splice index, 1
+        @delete = someObject, index =>
+          SomeService.delete(someObject).then =>
+            @data.splice index, 1
     ```
 
-  - **No DOM manipulation:** Avoid DOM manipulation (this should only live in a [directive](#directives)).
+  - **No DOM manipulation:** Avoid DOM manipulation (this should only live in a [directive](#directive)).
 
   - **Quick Summary Example:**
 
@@ -320,25 +521,23 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
 
         @someVar1 = someService.someSvcMethod1()
         @someVar2 = someService.someSvcMethod2()
-
     ```
-
 
 
 **[Back to top](#table-of-contents)**
 
 
-## Services
+### Service
 
-  - **Use `.service` instead of `.factory`:** All Angular services are singletons.  Usage of `.service` or `.factory` is purely a preference and each provides a different way to create objects.  Favor services over factories since the syntax exactly matches the way that [controllers are defined above](#controllers).  Build muscle memory.
+  - **Use `.service` instead of `.factory`:** All Angular services are singletons.  Usage of `.service` or `.factory` is purely a preference and each provides a different way to create objects.  With CoffeeScript, favor services over factories since the syntax exactly matches the way we are defining controllers, directives, and filters.
 
-  - **Quick Summary Example:**
+  - **Five Service Types:** Angular has five types of services: `.service`, `factory`, `constant`, `value`, and the all-purpose `provider`.  Each of these requires a name string as the first parameter.  By not using `.factory`, we can follow the same syntax for each of the remaining four services.
+
+  - **Quick Summary Examples:**
 
     See [code structure](#code-structure) explanation for using classes, the constructor, and exposing variables.
 
     ```coffeescript
-    'use strict'
-
     angular.module 'someApp'
     .service 'SomeService', class SomeService
       constructor: ($http, $q, $log) ->
@@ -353,20 +552,56 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
             $log.error 'Error: ', status, data
     ```
 
+    ```coffeescript
+    angular.module 'someApp'
+    .constant 'SomeConstant', class SomeConstant
+      constructor: ->
+
+        URL: 'https://api.some_backend.com'
+        CONFIG:
+          headers:
+            'Some-Backend-Key': '2Opu5BGW416J5jIA1MOKOKHqZEuja4krmNdPbZsh'
+            'Content-Type': 'application/json'
+    ```
+
 **[Back to top](#table-of-contents)**
 
 
-## Directives
+### Directive
 
-  - **KISS Principle:** Only include the high level information at the top of your directive.  Don't make directives more complicated than they need to be.  Put details in classes further down in the code.
+  - **KISS Principle:** We only include the high level information at the top of our directive.  Don't make directives more complicated than they need to be.  Put details in classes further down in the code.
 
     ```coffeescript
     angular.module 'directives'
+    .directive 'someDirective', class SomeDirective
+        constructor: ->
+
+          restrict: 'E'
+          templateUrl: 'app/some-directive.html'
+          controller: someDirectiveCtrl
+          controllerAs: 'sc'
+          link: someDirectiveLink
+
+    class someDirectiveCtrl
+      constructor: ->
+        @someVar1 = 'some string'
+
+    class someDirectiveLink
+      constructor: (scope, elem, attr) ->
+        @someVar2 = attr.someAttr
+    ```
+
+  - **Stick with the Program:** Since a directive returns a simple object, it could just as easily be written without using class.
+
+    ```coffeescript
+    # avoid
+    angular.module 'directives'
     .directive 'someDirective', ->
+
       restrict: 'E'
       templateUrl: 'app/some-directive.html'
       controller: someDirectiveCtrl
-      controllerAs: 'sd'
+      controllerAs: 'sc'
       link: someDirectiveLink
 
     class someDirectiveCtrl
@@ -378,15 +613,17 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
         @someVar2 = attr.someAttr
     ```
 
+    There are two reasons to use the class approach: (1) This aids with debugging, (2) This is the same technique used for controllers, services, and filters (muscle memory).
+
   - **Declaration restrictions:** Only create element or attribute directives (`restrict: 'EA'`).  Avoid old-style directives (class and comment).
 
-  - **Choosing Directive Type:** Simple guideline... If your directive contains a template, use an element directive.  Otherwise, use an attribute directive.  The default value for `restrict` is `EA`; this is fine, but keep this guideline in mind when coding your html.
+  - **Choosing Directive Type:** Simple guideline... If our directive contains a template, we use an element directive.  Otherwise, we use an attribute directive.  The default value for `restrict` is `EA` (since Angular 1.3); this is fine, but let's keep this guideline in mind when we code our html.
 
     ```html
-    <!-- when the directive has a template or templateURL property -->
+    <!-- Element directive when there is a template or templateURL property -->
     <some-directive></some-directive>
 
-    <!-- when the directive has no template -->
+    <!-- Attribute directive when there is no template -->
     <div some-directive></div>
     ```
 
@@ -397,7 +634,9 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
       template: '<div>' +
           '<h1>My directive</h1>' +
         '</div>'
+    ```
 
+    ```coffeescript
     # recommended
       template: [
         '<div>'
@@ -417,7 +656,9 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
       constructor:
         $('.dragzone').on 'dragend', function ->
           ...
+    ```
 
+    ```coffeescript
     # recommended
     angular.module 'someApp'
     .directive 'dragUpload',  ->
@@ -429,14 +670,14 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
           ...
     ```
 
-  - **Naming conventions:** Never prefix custom directives with `ng-`, they might conflict with future native directives.  It is recommended to prefix all custom directives with company or project-specific characters to reduce the liklihood of naming collisions with 3rd party directives.  Also see [general name convention comment](#angular-naming-conventions) about lowerCamelCasing directive names.
+  - **Naming conventions:** Never prefix custom directives with `ng-`, they might conflict with future native directives.  It is recommended to prefix all custom directives with company or project-specific characters to reduce the liklihood of naming collisions with 3rd party directives.  Also see [general name convention comment](#angular-method-naming) about lowerCamelCasing directive names.
 
-  - **controllerAs:** Use the `controllerAs` syntax inside Directives as well.
+  - **controllerAs:** Use the `controllerAs` syntax inside directives as well.
 
 **[Back to top](#table-of-contents)**
 
 
-## Filters
+### Filters
 
   - **Global filters:** Create global filters using `angular.filter()` only.  Never use local filters inside controllers or services so as to enhance testing and reusability.
 
@@ -449,11 +690,12 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
         @startsWithLetterA = (items) ->
           items.filter (item) ->
             /^a/i.test item.name
+    ```
 
-
+    ```coffeescript
     # recommended
     angular.module 'someApp'
-    .filter 'startsWithLetterA', class startsWithLetterA
+    .filter 'startsWithLetterA', class StartsWithLetterA
       constructor: ->
 
         (items) ->
@@ -461,52 +703,51 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
             /^a/i.test item.name
     ```
 
-  - See [general name convention comment](#angular-naming-conventions) about lowerCamelCasing filter names.
+  - See [general name convention comment](#angular-method-naming) about lowerCamelCasing filter names.
 
 **[Back to top](#table-of-contents)**
 
 
-## Comment Standards
+### Config & Run
 
-  **jsDoc:** Use jsDoc syntax to document function names, description, params and returns.
+Angular's `.config` and `.run` methods are run once (and only once) at the initial page load.  Because they are never called again, they do not have a name string parameter.  Thus, the syntax is slightly different.
 
-  ```coffeescript
-  ###*
-   # @name Http
+  - The most common usage for `.config` is probably a router.  A router based on the Angular team's "ngView" module should look something like this example.
 
-   # @desc
-   # Send http requests to server.
-   #
-   ###
+    ```coffeescript
+    angular.module 'someApp'
+    .config, class Router
+      constructor: $routeProvider ->
 
-  angular.module 'someApp'
-  .service 'Http', class Http
-    constructor: ($http, $q, $log) ->
+        $routeProvider
 
-      ###*
-       # @name get
-       # @desc Send http get request to API endpoint
-       # @param {String} url - URI to direct request to
-       # @param {...} ... - ...
-       # @returns {Object} promise - ...
-       ###
+          .when '/home',
+            templateUrl: 'some/path/to/home.html'
+            controller: 'HomeCtrl'
+            controllerAs: 'home'
 
-      @get = (url, ...) ->
-        deferred = $q.defer()
+          .when '/dashboard',
+            templateUrl: 'some/path/to/dash.html'
+            controller: 'DashCtrl'
+            controllerAs: 'dash'
+
+          ...
+
+          .otherwise '/home'
+    ```
+
+    If there is a controller, use controllerAs syntax and don't call the controller from the template with `<div ng-controller="someController as sc">`.
+
+  - A `.run` script should look something like this.
+
+    ```coffeescript
+    angular.module 'someApp'
+    .run, class SomeScript
+      constructor: $rootScope ->
+
+        $rootScope.$on '$routeChangeStart', ...
         ...
-        $http.get()
-        .success (data) ->
-          deferred.resolve(data)
-  ```
-
-**[Back to top](#table-of-contents)**
-
-
-## Minification & Annotation
-
-  - Do not use Angular array syntax or `.$inject` in your code.  Neither technique is DRY.  They both reduce readability, increase unnecessary complexity to your code, and increase the potential for mistakes.  Let your build system handle this for you.
-
-  - Use [ng-annotate](//github.com/olov/ng-annotate) for Gulp or Grunt (`ng-min` is deprecated).  This will protect your code from minification routines which shorten variable names and break the app.  Function declarations will use Angular's `.$inject` notation and function expressions will use Angular bracket notation.  Adding `@ngInject` comments to your code will explicitly require `.$inject` notation which can yield faster performace.
+    ```
 
 **[Back to top](#table-of-contents)**
 
@@ -525,21 +766,25 @@ app/
         app/   # examples of general-purpose, app-specific scripts
             api.coffee
             cookies.coffee
-            paths.coffee
-            routes-config.coffee
+            routes.coffee
+            run.coffee
         app-module.coffee   # this is the script that kicks everything off
-        directives/   # examples of general-purpose directives
+        directives/   # examples of directives
             some_table/
                 some_table.coffee
                 some_table.html
+                _some-table.scss
             some_widget/
                 ...
         filters/
             some_filter1.coffee
             some_filter2.coffee
-        utils/   # examples of general-purpose scripts (not app-specific)
+        lib_wrappers/   # examples of 3rd party library wrappers
             lodash.coffee
+            moment.coffee
+        utils/   # examples of general-purpose scripts (not app-specific)
             user_auth.coffee
+            http_wrapper.coffee
         utils-module.coffee
     components/
         dashboard/
@@ -547,9 +792,6 @@ app/
             dashboard.coffee
             dashboard.html
             _dashboard.scss
-            directives/   # examples of specialized directives
-                some_table1/
-                some_table2/
         dashboard-module.coffee
         home/
             ...
@@ -564,15 +806,13 @@ app/
 
   - Example above shows html, scss, and coffee files.  This could just as easily include jade, haml, less, sass, styl, etc.
 
-  - All `.scss` (Sass) files other than `main.scss` are prefixed with a `_` so they can import into the `main.scss` file.
+  - All Sass (`.scss`) files other than `main.scss` are prefixed with a `_` so they can import into the `main.scss` file.
 
   - I place a small module file at the same level of the folder that contains the module files (this does not apply to directives).
 
   - If any of the folders become too large and unwieldy (for example, `components`), it is easy enough to create a subdirectory structure.
 
-  - In the example above, `lodash.coffee` is simply a wrapper to bring lodash into the Angular dependency injection environment and remove it from the window object.  Details explained in [this video](https://www.youtube.com/watch?v=OvBlI9KuaBk).
-
-  - Regardless of your favorite file structure, third party libraries will sometimes require a tweak of either the file structure or the library itself.
+  - This file structure is a slightly different than [`yo ng-poly`](https://github.com/dustinspecker/generator-ng-poly), but a `ng-poly` starter app can easily be restructured to this convention.
 
 **File Naming Convention:**
 
@@ -580,11 +820,11 @@ app/
 
   - Convert any camelCase Angular names to snake_case file names, i.e. `angular.directive 'someCoolWidget', ...` translates into `some_cool_widget.coffee`.
 
-  - Don't use UPPER CASE letters in file names.
+  - Don't use any UPPER CASE letters in file names.
 
   - For controller files, add `-ctrl` to the filename.  For module files, add `-module` to the filename.  For all other files, don't add the Angular mehod to the name.
 
-  - ***Note:*** It is common to use other delimeters besides `-`, such as `.` or `_` or even camelCasing.
+  - ***Note:*** It is common to use other delimeters besides `-`, such as `.` or `_` or even camelCasing.  I have selected a hyphen delimeter simply because this works best if we choose to use [`yo ng-poly`](https://github.com/dustinspecker/generator-ng-poly).
 
 **[Back to top](#table-of-contents)**
 
@@ -638,10 +878,10 @@ This section is less about style and more about hints and performance recommenda
   - **One-time Binding Syntax:** Since Angular 1.3, it is possible to use one-time binding syntax `{{ ::value }}`.  Binding once removes the watcher from the scope's `$$watchers` array after the `undefined` variable becomes resolved, thus improving performance in each dirty-check.
 
     ```html
-    # avoid
+    <!-- avoid -->
     <h1>{{ sc.title }}</h1>
 
-    # recommended
+    <!-- recommended -->
     <h1>{{ ::sc.title }}</h1>
     ```
 
@@ -652,6 +892,31 @@ This section is less about style and more about hints and performance recommenda
 
 ### Angular Wrapper References
 
+  - **3rd Pary Libraries:** Wrap any 3rd party libraries (such as Underscore, Lodash, jQuery, Moment, Upload, etc.) in an Angular service to aid testing and Angular references.  Details explained in [this video](https://www.youtube.com/watch?v=OvBlI9KuaBk).
+
+    ```coffeescript
+    angular.module 'someApp'
+    .run, class Run
+      # Invoke _ at runtime.  Lodash service can now delete the global reference.
+      constructor: _ ->
+    ```
+
+    ```coffeescript
+    angular.module 'lib_wrappers'
+    .service '_', class Lodash
+      constructor: ->
+
+        # Bind a local _ on the global _
+        _ = window._
+
+        # Make sure the global lodash library is no longer available for
+        # accidental usage without proper injection.  If other 3rd party
+        # libraries require window._, don't do this!
+        delete window._
+
+        ( _ )
+    ```
+
   - **$document and $window:** Use `$document` and `$window` at all times to aid testing and Angular references.
 
     ```coffeescript
@@ -660,8 +925,9 @@ This section is less about style and more about hints and performance recommenda
       link: $scope, $element, $attrs ->
         document.addEventListener 'click', function ->
           ...
+    ```
 
-
+    ```coffeescript
     # recommended
     dragUpload ->
       link: $scope, $element, $attrs, $document ->
@@ -677,7 +943,9 @@ This section is less about style and more about hints and performance recommenda
       link: $scope, $element, $attrs ->
         setTimeout ->
           ..., 1000
+    ```
 
+    ```coffeescript
     # recommended
     dragUpload $timeout ->
       link: $scope, $element, $attrs ->
