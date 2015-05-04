@@ -247,12 +247,6 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
     .value 'SomeValue', ...
     ```
 
-    ```coffeescript
-    # recommended
-    angular.module 'someApp'
-    .provider 'SomeProvider', ...
-    ```
-
 **[Back to top](#table-of-contents)**
 
 
@@ -531,7 +525,7 @@ This section defines a uniform syntax for each of the Angular methods.
 
   - **Use `.service` instead of `.factory`:** All Angular services are singletons.  Usage of `.service` or `.factory` is purely a preference and each provides a different way to create objects.  With CoffeeScript, favor services over factories since the syntax exactly matches the way we are defining controllers, directives, and filters.
 
-  - **Five Service Types:** Angular has five types of services: `.service`, `factory`, `constant`, `value`, and the all-purpose `provider`.  Each of these requires a name string as the first parameter.  By not using `.factory`, we can follow the same syntax for each of the remaining four services.
+  - **Five Service Types:** Angular has five types of services: `.service`, `factory`, `constant`, `value`, and the all-purpose `provider`.  Each of these requires a name string as the first parameter.  By not using `.factory`, we can follow the same syntax for the remaining three higher level services (`service`, `constant`, and `value`).
 
   - **Quick Summary Examples:**
 
@@ -833,6 +827,7 @@ app/
 
 This section is less about style and more about hints and performance recommendations.
 
+
 ### Publish & Subscribe (Pub/Sub) Events
 
   - **$scope:** Use the `$emit` and `$broadcast` methods to trigger events to direct relationship scopes only.
@@ -957,6 +952,7 @@ This section is less about style and more about hints and performance recommenda
 
 
 ## Angular Docs
+
 For anything else, including API reference, check the [Angular documentation](//docs.angularjs.org/api).
 
 
