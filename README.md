@@ -409,9 +409,10 @@ Angular apps are built with a handful of primary methods provided by Angular.  T
 
 This section defines a uniform syntax for each of the Angular methods.
 
-  - Most Angular methods such as `.controller`, `.service`, `.directive`, and `.filter` require a name string as the first parameter.  Use the same class/contructor syntax for each of these.  Build muscle memory.
+  - For Angular methods that require a name string and a function (`.controller`, `.service`, `.filter`), use the following class/contructor syntax.
 
     ``` coffeescript
+    # recommended for .controller, .service, and .filter
     angular.module 'someApp'
     .someMethod 'SomeName', class SomeName
       constructor: someParam ->
@@ -419,9 +420,20 @@ This section defines a uniform syntax for each of the Angular methods.
         ...
     ```
 
-  - There are two Angular methods that don't pass a name string as the first parameter: `.config` and `.run`.  Use the same class/contructor syntax for each of these.
+  - For Angular methods that require a name string and an object (`.directive`, `.constant`, `.value`), use the following syntax.
 
     ``` coffeescript
+    # recommended for .directive, .constant, and .value
+    angular.module 'someApp'
+    .someMethod 'SomeName', ->
+
+      ...
+    ```
+
+  - For Angular methods that require only a function (`.config`, `.run`), use the following class/contructor syntax.
+
+    ``` coffeescript
+    # recommended for .config and .run
     angular.module 'someApp'
     .someMethod, class SomeName
       constructor: someParam ->
@@ -563,51 +575,29 @@ This section defines a uniform syntax for each of the Angular methods.
 
 ### Directive
 
-  - **KISS Principle:** We only include the high level information at the top of our directive.  Don't make directives more complicated than they need to be.  Put details in classes further down in the code.
+  - **Lean DDO:** Keep the top of the directive definition object (DDO) clean and lean.  Put controller details in a class further down in the code.  For readability, try to keep each property in the DDO at one line, with the excpetion of template, scope, and link.  Since link can be many lines, put link last.
 
     ```coffeescript
-    angular.module 'directives'
-    .directive 'someDirective', class SomeDirective
-        constructor: ->
-
-          restrict: 'E'
-          templateUrl: 'app/some-directive.html'
-          controller: someDirectiveCtrl
-          controllerAs: 'sc'
-          link: someDirectiveLink
-
-    class someDirectiveCtrl
-      constructor: ->
-        @someVar1 = 'some string'
-
-    class someDirectiveLink
-      constructor: (scope, elem, attr) ->
-        @someVar2 = attr.someAttr
-    ```
-
-  - **Stick with the Program:** Since a directive returns a simple object, it could just as easily be written without using class.
-
-    ```coffeescript
-    # avoid
     angular.module 'directives'
     .directive 'someDirective', ->
 
       restrict: 'E'
       templateUrl: 'app/some-directive.html'
+      scope: {
+        someVar: '='
+      }
       controller: someDirectiveCtrl
       controllerAs: 'sc'
-      link: someDirectiveLink
+      link: (scope, elem, attrs) ->
 
-    class someDirectiveCtrl
+        ...
+
+    .controller 'someDirectiveCtrl', class someDirectiveCtrl
       constructor: ->
+
         @someVar1 = 'some string'
-
-    class someDirectiveLink
-      constructor: (scope, elem, attr) ->
-        @someVar2 = attr.someAttr
+        ...
     ```
-
-    There are two reasons to use the class approach: (1) This aids with debugging, (2) This is the same technique used for controllers, services, and filters (muscle memory).
 
   - **Declaration restrictions:** Only create element or attribute directives (`restrict: 'EA'`).  Avoid old-style directives (class and comment).
 
@@ -656,10 +646,8 @@ This section defines a uniform syntax for each of the Angular methods.
     # recommended
     angular.module 'someApp'
     .directive 'dragUpload',  ->
-      link: DragUploadLink
+      link: (scope, element, attrs) ->
 
-    class DragUploadLink
-      constructor: (scope, element, attrs) ->
         element.on('dragend', ->
           ...
     ```
@@ -917,7 +905,7 @@ This section is less about style and more about hints and performance recommenda
     ```coffeescript
     # avoid
     dragUpload ->
-      link: $scope, $element, $attrs ->
+      link: scope, elem, attrs ->
         document.addEventListener 'click', function ->
           ...
     ```
@@ -925,7 +913,7 @@ This section is less about style and more about hints and performance recommenda
     ```coffeescript
     # recommended
     dragUpload ->
-      link: $scope, $element, $attrs, $document ->
+      link: scope, elem, attrs, $document ->
         $document.addEventListener 'click', ->
           ...
     ```
@@ -935,7 +923,7 @@ This section is less about style and more about hints and performance recommenda
     ```coffeescript
     # avoid
     dragUpload ->
-      link: $scope, $element, $attrs ->
+      link: scope, elem, attrs ->
         setTimeout ->
           ..., 1000
     ```
@@ -943,7 +931,7 @@ This section is less about style and more about hints and performance recommenda
     ```coffeescript
     # recommended
     dragUpload $timeout ->
-      link: $scope, $element, $attrs ->
+      link: scope, elem, attrs ->
         $timeout ->
           ..., 1000
     ```
