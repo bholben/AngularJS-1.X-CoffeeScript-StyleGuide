@@ -2,9 +2,9 @@
 
 *Opinionated AngularJS 1.X style guide for teams by [@rbholben](//twitter.com/rbholben)*
 
-The purpose of this style guide is to propose structure and conventions for scalable team-built Angular 1.X CoffeeScript applications.  It can also serve as a syntactical "cheat sheet" for how to write various Angular code snippets.  This guide has been forked from and heavily influenced by Todd Motto's [AngularJS style guide](https://github.com/toddmotto/angularjs-styleguide) and customized to work with CoffeeScript.
+The purpose of this style guide is to propose structure and conventions for scalable team-built Angular 1.X CoffeeScript applications.  It can also serve as a syntactical "cheat sheet" for how to write various Angular code snippets.  This guide has been forked from Todd Motto's [AngularJS style guide](https://github.com/toddmotto/angularjs-styleguide) and customized to work with CoffeeScript.  A full list of influencers is in the [Acknowledgements](#acknowledgements) section.
 
-The [`yo ng-poly`](https://github.com/dustinspecker/generator-ng-poly) project is the closest Yeoman generator I have found for scaffolding a project that fits these conventions.  This generator is very flexible, providing a plethora of options (HTML, CSS, JavaScript, Jade, Sass, Less, Stylus, CoffeeScript, et al).
+The [`generator-ng-poly`](https://github.com/dustinspecker/generator-ng-poly) project is the a powerful Yeoman generator that comes reasonably close to fitting these conventions.  This generator is very flexible, providing a plethora of options (HTML, CSS, JavaScript, Jade, Sass, Less, Stylus, CoffeeScript, et al).
 
 ***A note about style guides:***
 The goal here is to set a starting point where any team can customize the document to meet their needs.  Keep in mind that there are many ways to accomplish the same end goal.  Techniques defined below are merely one way.  The important thing is that teams agree on their own style early in the process.  Since much more time is spent reading code rather than writing code, team members that don't fit in with a common convention can greatly reduce the productivity of the team as a whole.
@@ -12,6 +12,7 @@ The goal here is to set a starting point where any team can customize the docume
 
 ## Table of Contents
 
+  1. [Overarching Principles](#overarching-principles)
   1. [General Conventions](#general-conventions)
     1. [EditorConfig](#editorconfig)
     1. [Linting](#linting)
@@ -34,9 +35,27 @@ The goal here is to set a starting point where any team can customize the docume
     1. [Publish & Subscribe (Pub/Sub) Events](#publish--subscribe-pubsub-events)
     1. [Performance](#performance)
     1. [Angular Wrapper References](#angular-wrapper-references)
+  1. [Acknowledgements](#acknowledgements)
+
+
+## Overarching Principles
+
+A few basic criteria form a foundation for this style guide:
+
+  - Separation of concerns
+  - Short files, but many of them
+  - Scalability
+  - Maximum readability, minimal punctuation
+  - Declarative purpose at top of files, building details as you go down
+  - Minimal usage of anonymous functions (for stack trace when debugging)
+  - DRY (Don't Repeat Yourself)
+  - Consistency
+
+**[Back to top](#table-of-contents)**
 
 
 ## General Conventions
+
 This section includes broad conventions that are not Angular-specific.
 
 
@@ -77,7 +96,7 @@ This section includes broad conventions that are not Angular-specific.
 
 ### CoffeeScript
 
-  - **Parentheses:** In CoffeeScript, parentheses are optional in many situations.  Favor the approach without parentheses.
+  - **Parentheses:** In [CoffeeScript](http://coffeescript.org/), parentheses are optional in many situations.  Favor the approach without parentheses.
 
     ```coffeescript
     # avoid
@@ -89,7 +108,7 @@ This section includes broad conventions that are not Angular-specific.
     angular.module 'someApp'
     ```
 
-  - **Avoid `this`:** `@` is CoffeeScript shorthand for `this`.  Favor `@`.
+  - **Avoid `this`:** Use CoffeeScript's `@` instead of `this`.
 
   - **IIFE Scoping:** CoffeeScript automatically compiles to JavaScript wrapped inside an IIFE (immediately invoked function expression).  This ensures that the global namespace will not be polluted.  It is not necessary to add any additional IIFE.
 
@@ -1093,6 +1112,15 @@ This section is less about style and more about hints and performance recommenda
 
 **[Back to top](#table-of-contents)**
 
+
+## Acknowledgements
+
+This guide was influenced by the following people and the Angular community as a whole.
+
+  - [Todd Motto](https://twitter.com/toddmotto) - [Opinionated AngularJS styleguide for teams](http://toddmotto.com/opinionated-angular-js-styleguide-for-teams/)
+  - [John Papa](https://twitter.com/John_Papa) - [Angular Style Guide](https://github.com/johnpapa/angular-styleguide)
+  - [Mark Meyer](https://twitter.com/nuclearghost) - [The Top 10 Mistakes AngularJS Developers Make](https://www.airpair.com/angularjs/posts/top-10-mistakes-angularjs-developers-make)
+  - [Dustin Specker](https://twitter.com/dustinspecker) -  [Yeoman ng-poly Generator](https://github.com/dustinspecker/generator-ng-poly)
 
 ## Angular Docs
 
