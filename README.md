@@ -4,7 +4,7 @@
 
 The purpose of this style guide is to propose structure and conventions for scalable team-built Angular 1.X CoffeeScript applications.  It can also serve as a syntactical "cheat sheet" for how to write various Angular code snippets.  This guide has been forked from Todd Motto's [AngularJS style guide](https://github.com/toddmotto/angularjs-styleguide) and customized to work with CoffeeScript.  A full list of influencers is in the [Acknowledgements](#acknowledgements) section.
 
-The [`generator-ng-poly`](https://github.com/dustinspecker/generator-ng-poly) project is the a powerful Yeoman generator that comes reasonably close to fitting these conventions.  This generator is very flexible, providing a plethora of options (HTML, CSS, JavaScript, Jade, Sass, Less, Stylus, CoffeeScript, et al).
+The [`generator-ng-poly`](https://github.com/dustinspecker/generator-ng-poly) project is a powerful Yeoman generator that comes reasonably close to fitting these conventions.  This generator is very flexible, providing a plethora of options (HTML, CSS, JavaScript, Jade, Sass, Less, Stylus, CoffeeScript, et al).
 
 ***A note about style guides:***
 The goal here is to set a starting point where any team can customize the document to meet their needs.  Keep in mind that there are many ways to accomplish the same end goal.  Techniques defined below are merely one way.  The important thing is that teams agree on their own style early in the process.  Since much more time is spent reading code rather than writing code, team members that don't fit in with a common convention can greatly reduce the productivity of the team as a whole.
