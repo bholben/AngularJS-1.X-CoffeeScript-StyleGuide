@@ -639,6 +639,8 @@ This section defines a uniform syntax for each of the Angular methods.
 
     If a controller grows to more than ~100 lines, it might be time to consider breaking the functionality into pieces via custom directives and/or nested scopes.
 
+    Another gauge is to look at the code base.  If there are more controllers than services, it might be time to refactor.
+
   - **Quick Summary Example:**
 
     See [code structure](#code-structure) explanation for using classes, the constructor, and exposing variables.
