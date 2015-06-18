@@ -460,7 +460,7 @@ This section defines a uniform syntax for each of the Angular methods.
     ``` coffeescript
     # recommended for .config and .run
     angular.module 'someApp'
-    .someMethod, class SomeName
+    .someMethod class SomeName
 
       constructor: (someInjectedService) ->
 
@@ -862,7 +862,7 @@ Angular's `.config` and `.run` methods are run once (and only once) at the initi
 
     ```coffeescript
     angular.module 'someApp'
-    .config, class Router
+    .config class Router
 
       constructor: ($routeProvider) ->
 
@@ -887,7 +887,7 @@ Angular's `.config` and `.run` methods are run once (and only once) at the initi
 
     ```coffeescript
     angular.module 'someApp'
-    .run, class SomeScript
+    .run class SomeScript
 
       constructor: ($rootScope) ->
 
